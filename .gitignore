@@ -17,6 +17,10 @@ build/
 .env.local
 .env.*.local
 
+# Backend runtime
+backend/auth_config.json
+backend/uploads/
+
 # IDE
 .vscode/
 .idea/

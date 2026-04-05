@@ -58,9 +58,9 @@ async function loadOfficeInfo() {
   try {
     const response = await fetch('/api/office-info');
     const data = await response.json();
-    if (data.ok && data.officeNameFromServer) {
-      officeNameFromServer = data.officeNameFromServer;
-    }
+      if (data.ok && data.office_name) {
+        officeNameFromServer = data.office_name;
+      }
   } catch (e) {
     console.error('获取 office-info 失败:', e);
   }
@@ -215,6 +215,12 @@ const TYPEWRITER_DELAY = 50;
 let agents = {}; // agentId -> sprite/container
 let lastAgentsFetch = 0;
 const AGENTS_FETCH_INTERVAL = 2500;
+
+// Phase 2: Session and Timeline fetch config
+let lastSessionsFetch = 0;
+const SESSIONS_FETCH_INTERVAL = 30000; // 30 seconds
+let lastTimelineFetch = 0;
+const TIMELINE_FETCH_INTERVAL = 15000; // 15 seconds
 
 // agent 颜色配置
 const AGENT_COLORS = {
@@ -577,6 +583,8 @@ function create() {
   loadMemo();
   fetchStatus();
   fetchAgents();
+  fetchSessions();
+  fetchTimeline();
 
   // 可选调试：仅在显式开启 debug 模式时渲染测试用尼卡 agent
   let debugAgents = false;
@@ -631,6 +639,8 @@ function create() {
 function update(time) {
   if (time - lastFetch > FETCH_INTERVAL) { fetchStatus(); lastFetch = time; }
   if (time - lastAgentsFetch > AGENTS_FETCH_INTERVAL) { fetchAgents(); lastAgentsFetch = time; }
+  if (time - lastSessionsFetch > SESSIONS_FETCH_INTERVAL) { fetchSessions(); lastSessionsFetch = time; }
+  if (time - lastTimelineFetch > TIMELINE_FETCH_INTERVAL) { fetchTimeline(); lastTimelineFetch = time; }
 
   const effectiveStateForServer = pendingDesiredState || currentState;
   if (serverroom) {
@@ -869,6 +879,126 @@ function fetchAgents() {
     });
 }
 
+// Phase 2: Fetch sessions
+function fetchSessions() {
+  fetch('/api/sessions?limit=15&t=' + Date.now(), { cache: 'no-store' })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.ok || !data.sessions) return;
+
+      const sessionList = document.getElementById('session-list');
+      const sessionCount = document.getElementById('session-count');
+      if (!sessionList) return;
+
+      const sessions = data.sessions || [];
+      sessionList.innerHTML = '';
+
+      for (let s of sessions) {
+        const item = document.createElement('div');
+        item.className = 'session-item';
+        if (s.ageMs && s.ageMs < 5 * 60 * 1000) {
+          item.className += ' active';
+        }
+
+        const timeStr = s.updatedAtISO ? formatTimeAgo(s.updatedAt) : '';
+
+        item.innerHTML = `
+          <span class="session-emoji">${s.agentEmoji || '🤖'}</span>
+          <span class="session-channel ${s.kind || 'direct'}">${escapeHtml(s.channel || 'unknown')}</span>
+          <div class="session-info">
+            <div class="session-summary">${escapeHtml(s.summary || '')}</div>
+            <div class="session-model">${escapeHtml(s.model || '')}</div>
+          </div>
+          <span class="session-time">${timeStr}</span>
+        `;
+        sessionList.appendChild(item);
+      }
+
+      if (sessionCount && sessionCount.textContent) {
+        sessionCount.textContent = `共 ${data.returned || 0} 个会话`;
+      }
+    })
+    .catch(error => {
+      console.error('拉取 sessions 失败:', error);
+      const sessionList = document.getElementById('session-list');
+      if (sessionList) {
+        sessionList.innerHTML = '<div style="color:#ef4444;font-size:12px;text-align:center;padding:20px 0;">加载失败</div>';
+      }
+    });
+}
+
+// Phase 2: Fetch timeline
+function fetchTimeline() {
+  fetch('/api/sessions/timeline?limit=10&hours=24&t=' + Date.now(), { cache: 'no-store' })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.ok || !data.timeline) return;
+
+      const timelineList = document.getElementById('timeline-list');
+      if (!timelineList) return;
+
+      const timeline = data.timeline || [];
+      timelineList.innerHTML = '';
+
+      for (let t of timeline) {
+        const item = document.createElement('div');
+        item.className = 'timeline-item';
+        if (t.isNew) {
+          item.className += ' new';
+        }
+        if (t.kind === 'subagent') {
+          item.className += ' subagent-item';
+        }
+
+        item.innerHTML = `
+          <span class="timeline-emoji">${t.agentEmoji || '🤖'}</span>
+          <div class="timeline-body">
+            <div class="timeline-summary">${escapeHtml(t.summary || '')}</div>
+            <div class="timeline-meta">
+              <span>${escapeHtml(t.agentName || '')}</span>
+              <span class="timeline-channel">${escapeHtml(t.channel || '')}</span>
+            </div>
+          </div>
+          <span class="timeline-time">${t.time || '--:--'}</span>
+        `;
+        timelineList.appendChild(item);
+      }
+    })
+    .catch(error => {
+      console.error('拉取 timeline 失败:', error);
+      const timelineList = document.getElementById('timeline-list');
+      if (timelineList) {
+        timelineList.innerHTML = '<div style="color:#ef4444;font-size:12px;text-align:center;padding:20px 0;">加载失败</div>';
+      }
+    });
+}
+
+// Helper: format time ago
+function formatTimeAgo(timestampMs) {
+  if (!timestampMs) return '';
+  const now = Date.now();
+  const diff = now - timestampMs;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes} 分钟前`;
+  if (hours < 24) return `${hours} 小时前`;
+  return `${Math.floor(hours / 24)} 天前`;
+}
+
+// Helper: escape HTML
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+
 function getAreaPosition(area, slotIndex) {
   const positions = AREA_POSITIONS[area] || AREA_POSITIONS.breakroom;
   const idx = (slotIndex || 0) % positions.length;
@@ -878,9 +1008,11 @@ function getAreaPosition(area, slotIndex) {
 function renderAgent(agent) {
   const agentId = agent.id || agent.agentId;
   const name = agent.name || 'Agent';
+  const emoji = agent.emoji || '⭐';
   const area = agent.area || 'breakroom';
   const state = agent.state || 'idle';
   const detail = agent.detail || '';
+  const progress = agent.progress !== null && agent.progress !== undefined ? agent.progress : null;
 
   // 获取这个 agent 在区域里的位置
   const pos = getAreaPosition(area, agent._slotIndex || 0);
@@ -895,12 +1027,18 @@ function renderAgent(agent) {
     const container = game.add.container(baseX, baseY);
     container.setDepth(1200);
 
-    // 像素小人：用星星图标
-    const starIcon = game.add.text(0, 0, '⭐', {
+    // 状态光晕
+    const glowColor = getGlowColor(state);
+    const glow = game.add.circle(0, 0, 22, glowColor, 0.25);
+    glow.setStrokeStyle(1, glowColor);
+    glow.name = 'stateGlow';
+
+    // 像素小人：用 emoji 图标
+    const emojiIcon = game.add.text(0, 0, emoji, {
       fontFamily: 'ArkPixel, monospace',
       fontSize: '32px'
     }).setOrigin(0.5);
-    starIcon.name = 'starIcon';
+    emojiIcon.name = 'emojiIcon';
 
     // 名字标签（漂浮）
     const nameTag = game.add.text(0, -36, name, {
@@ -915,35 +1053,128 @@ function renderAgent(agent) {
 
     // 状态小点（根据 Agent 状态）
     let dotColor = 0x64748b;
-    if (state === 'idle') dotColor = 0x22c55e;  // 绿色：空闲
-    if (state === 'writing' || state === 'researching' || state === 'executing') dotColor = 0xf59e0b;  // 黄色：工作中
-    if (state === 'error') dotColor = 0xef4444;  // 红色：错误
+    if (state === 'idle') dotColor = 0x22c55e;
+    if (state === 'writing' || state === 'researching' || state === 'executing') dotColor = 0xf59e0b;
+    if (state === 'error') dotColor = 0xef4444;
     const statusDot = game.add.circle(20, -20, 5, dotColor);
     statusDot.setStrokeStyle(2, 0x000000);
     statusDot.name = 'statusDot';
 
-    container.add([starIcon, statusDot, nameTag]);
+    container.add([glow, emojiIcon, statusDot, nameTag]);
     agents[agentId] = container;
+
+    // 如果有进度，创建进度条
+    if (progress !== null) {
+      createAgentProgressBar(container, progress);
+    }
   } else {
     // 更新已有 agent
     const container = agents[agentId];
     container.setPosition(baseX, baseY);
 
+    // 更新光晕颜色
+    const glow = container.getByName('stateGlow');
+    if (glow) {
+      const newGlowColor = getGlowColor(state);
+      glow.setFillStyle(newGlowColor, 0.25);
+      glow.setStrokeStyle(1, newGlowColor);
+    }
+
+    // 更新 emoji
+    const emojiIcon = container.getByName('emojiIcon');
+    if (emojiIcon) {
+      emojiIcon.setText(emoji);
+    }
+
     // 更新名字
-    const nameTag = container.getAt(2);
-    if (nameTag && nameTag.name === 'nameTag') {
+    const nameTag = container.getByName('nameTag');
+    if (nameTag) {
       nameTag.setText(name);
     }
+
     // 更新状态点颜色
-    const statusDot = container.getAt(1);
-    if (statusDot && statusDot.name === 'statusDot') {
+    const statusDot = container.getByName('statusDot');
+    if (statusDot) {
       let dotColor = 0x64748b;
       if (state === 'idle') dotColor = 0x22c55e;
       if (state === 'writing' || state === 'researching' || state === 'executing') dotColor = 0xf59e0b;
       if (state === 'error') dotColor = 0xef4444;
       statusDot.fillColor = dotColor;
     }
+
+    // 更新或创建进度条
+    if (progress !== null) {
+      updateAgentProgressBar(container, progress);
+    }
   }
+}
+
+// Get glow color based on state
+function getGlowColor(state) {
+  switch(state) {
+    case 'idle': return 0x22c55e;
+    case 'writing':
+    case 'researching':
+    case 'executing':
+    case 'syncing': return 0xf59e0b;
+    case 'error': return 0xef4444;
+    default: return 0x64748b;
+  }
+}
+
+// Create progress bar for agent
+function createAgentProgressBar(container, progress) {
+  const barWidth = 60;
+  const barHeight = 4;
+  const barY = 20;
+
+  const bg = game.add.rectangle(0, barY, barWidth, barHeight, 0x1f2937);
+  bg.setStrokeStyle(1, 0x374151);
+  bg.name = 'progressBg';
+  bg.setOrigin(0.5);
+  container.add(bg);
+
+  const bar = game.add.rectangle(-barWidth / 2, barY, 0, barHeight, 0x22c55e);
+  bar.name = 'progressBar';
+  bar.setOrigin(0, 0.5);
+  container.add(bar);
+
+  const text = game.add.text(0, barY + 10, '', {
+    fontFamily: 'ArkPixel, monospace',
+    fontSize: '9px',
+    fill: '#9ca3af'
+  }).setOrigin(0.5);
+  text.name = 'progressText';
+  container.add(text);
+
+  updateAgentProgressBar(container, progress);
+}
+
+// Update progress bar for agent
+function updateAgentProgressBar(container, progress) {
+  const barWidth = 60;
+  const barHeight = 4;
+  const barY = 20;
+
+  const bar = container.getByName('progressBar');
+  const text = container.getByName('progressText');
+
+  if (!bar || !text) {
+    // Progress bar doesn't exist yet, create it
+    createAgentProgressBar(container, progress);
+    return;
+  }
+
+  const fillWidth = Math.max(0, Math.min(barWidth, (progress / 100) * barWidth));
+  bar.setSize(fillWidth, barHeight);
+
+  // Progress color changes based on value
+  let barColor = 0x22c55e; // Green
+  if (progress > 60) barColor = 0xf59e0b; // Yellow
+  if (progress > 85) barColor = 0xe94560; // Red (almost done)
+  bar.setFillStyle(barColor);
+
+  text.setText(`${progress}%`);
 }
 
 // 启动游戏

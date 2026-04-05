@@ -833,6 +833,243 @@
         .guest-agent-buttons button.leave-btn:hover {
             background: #6a2828;
         }
+        /* Session 列表面板（Phase 2） */
+        #session-panel {
+            position: relative;
+            width: 390px;
+            height: 300px;
+            background: #141722;
+            border: 4px solid #0e1119;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow: hidden;
+        }
+        #session-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px),
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px);
+            background-position:
+                9px 8px, calc(50% + 5px) 8px,
+                8px 9px, calc(100% - 10px) 9px,
+                9px calc(100% - 10px), calc(50% + 5px) calc(100% - 10px),
+                8px calc(50% + 5px), calc(100% - 10px) calc(50% + 5px);
+        }
+        #session-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px;
+            background-position:
+                left top, left top,
+                right top, right top,
+                left bottom, left bottom,
+                right bottom, right bottom;
+        }
+        #session-panel-title {
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 6px 0 10px;
+            border-bottom: 0;
+            margin-bottom: 0;
+        }
+        #session-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 4px;
+        }
+        #session-list::-webkit-scrollbar { width: 6px; }
+        #session-list::-webkit-scrollbar-track { background: #1a1a2e; }
+        #session-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .session-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: #1e2336;
+            border: 1px solid #2a3045;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        .session-item:hover { background: #252a40; }
+        .session-item.active { border-color: #e94560; }
+        .session-emoji { font-size: 18px; flex-shrink: 0; }
+        .session-channel {
+            color: #93c5fd;
+            font-size: 11px;
+            padding: 1px 6px;
+            background: #1e3a5f;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .session-channel.direct { color: #86efac; background: #14532d; }
+        .session-channel.subagent { color: #fbbf24; background: #78350f; }
+        .session-info { flex: 1; min-width: 0; }
+        .session-summary {
+            color: #e5e7eb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .session-time {
+            color: #6b7280;
+            font-size: 10px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .session-model {
+            color: #9ca3af;
+            font-size: 10px;
+        }
+        .session-footer {
+            color: #6b7280;
+            font-size: 11px;
+            text-align: center;
+            padding-top: 6px;
+            border-top: 1px solid #2a3045;
+        }
+        /* Timeline 面板（Phase 2） */
+        #timeline-panel {
+            position: relative;
+            width: 460px;
+            height: 300px;
+            background: #141722;
+            border: 4px solid #0e1119;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow: hidden;
+        }
+        #timeline-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px),
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px);
+            background-position:
+                9px 8px, calc(50% + 5px) 8px,
+                8px 9px, calc(100% - 10px) 9px,
+                9px calc(100% - 10px), calc(50% + 5px) calc(100% - 10px),
+                8px calc(50% + 5px), calc(100% - 10px) calc(50% + 5px);
+        }
+        #timeline-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px;
+            background-position:
+                left top, left top,
+                right top, right top,
+                left bottom, left bottom,
+                right bottom, right bottom;
+        }
+        #timeline-title {
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 6px 0 10px;
+            border-bottom: 0;
+            margin-bottom: 0;
+        }
+        #timeline-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 4px;
+        }
+        #timeline-list::-webkit-scrollbar { width: 6px; }
+        #timeline-list::-webkit-scrollbar-track { background: #1a1a2e; }
+        #timeline-list::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 10px;
+            background: #1e2336;
+            border-radius: 6px;
+            border-left: 3px solid #e94560;
+            transition: background 0.2s;
+        }
+        .timeline-item.new {
+            border-left-color: #22c55e;
+            background: #1e3622;
+            animation: timelinePulse 2s ease-in-out;
+        }
+        .timeline-item.subagent-item {
+            border-left-color: #f59e0b;
+        }
+        @keyframes timelinePulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            100% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+        }
+        .timeline-emoji { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+        .timeline-body { flex: 1; min-width: 0; }
+        .timeline-summary { color: #e5e7eb; font-size: 12px; }
+        .timeline-meta {
+            color: #6b7280;
+            font-size: 10px;
+            margin-top: 2px;
+            display: flex;
+            gap: 8px;
+        }
+        .timeline-time { flex-shrink: 0; color: #9ca3af; font-size: 11px; margin-top: 2px; }
         /* Memo 区域 - 4:3 小正方形 */
         #memo-panel {
             position: relative;
@@ -1128,6 +1365,234 @@
                 min-height: 36px;
             }
         }
+
+        /* === Phase 3: Mobile Responsive Design === */
+
+        /* Tablet and smaller screens (max-width: 1024px) */
+        @media (max-width: 1024px) {
+            #main-stage {
+                width: 100%;
+                max-width: 100vw;
+                padding: 0 10px;
+            }
+
+            #game-container {
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                aspect-ratio: 16/9;
+            }
+
+            #bottom-panels {
+                width: 100%;
+                max-width: 100vw;
+                flex-direction: column;
+                padding: 0 10px;
+            }
+
+            #memo-panel, #session-panel, #timeline-panel {
+                width: 100%;
+                max-width: none;
+            }
+
+            #memo-panel {
+                max-height: 200px;
+            }
+        }
+
+        /* Mobile phones (max-width: 768px) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 0;
+            }
+
+            #main-stage {
+                padding: 0 5px;
+            }
+
+            #game-container {
+                border-radius: 4px;
+            }
+
+            #bottom-panels {
+                gap: 10px;
+                margin-top: 10px;
+            }
+
+            /* 侧边栏按钮放大，便于触摸 */
+            #drawer-toggle {
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 16px;
+            }
+
+            /* 面板标题栏优化 */
+            .panel-header {
+                padding: 8px;
+            }
+
+            .panel-title {
+                font-size: 14px;
+            }
+
+            /* 会话列表项优化 */
+            .session-item {
+                padding: 8px;
+            }
+
+            .session-emoji {
+                font-size: 18px;
+            }
+
+            .session-summary {
+                font-size: 12px;
+            }
+
+            /* Timeline 优化 */
+            .timeline-item {
+                padding: 8px;
+            }
+
+            .timeline-emoji {
+                font-size: 18px;
+            }
+
+            .timeline-summary {
+                font-size: 12px;
+            }
+
+            /* Memo 内容优化 */
+            #memo-content {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            /* 隐藏坐标显示（移动端不需要） */
+            #coords-overlay {
+                display: none !important;
+            }
+        }
+
+        /* Small phones (max-width: 480px) */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px 0;
+            }
+
+            #game-container {
+                border-radius: 2px;
+            }
+
+            /* 底部面板垂直堆叠 */
+            #bottom-panels {
+                flex-direction: column;
+            }
+
+            /* Memo 面板调整 */
+            #memo-panel {
+                max-height: 150px;
+            }
+
+            #memo-date {
+                font-size: 12px;
+                padding: 6px;
+            }
+
+            #memo-content {
+                font-size: 11px;
+                line-height: 1.5;
+            }
+
+            /* Session 和 Timeline 可以切换显示 */
+            #session-panel, #timeline-panel {
+                max-height: 250px;
+            }
+        }
+
+        /* 横屏优化 (landscape orientation) */
+        @media (max-width: 896px) and (orientation: landscape) {
+            body {
+                flex-direction: column;
+                padding: 5px;
+            }
+
+            #game-container {
+                max-height: calc(100vh - 180px);
+            }
+
+            #bottom-panels {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            #memo-panel {
+                order: 1;
+                width: 100%;
+                max-height: 120px;
+            }
+
+            #session-panel {
+                order: 2;
+                width: calc(50% - 5px);
+            }
+
+            #timeline-panel {
+                order: 3;
+                width: calc(50% - 5px);
+            }
+        }
+
+        /* 触摸设备优化 */
+        @media (hover: none) and (pointer: coarse) {
+            /* 增大所有可点击元素的点击区域 */
+            button, .panel-header, .session-item, .timeline-item {
+                min-height: 44px;
+            }
+
+            /* 移除 hover 效果，改为 active 状态 */
+            .session-item:hover, .timeline-item:hover {
+                background: #f1f5f9;
+            }
+
+            .session-item:active, .timeline-item:active {
+                background: #e2e8f0;
+            }
+
+            /* 面板按钮优化 */
+            #drawer-toggle, #coords-toggle {
+                touch-action: manipulation;
+            }
+        }
+
+        /* 竖屏模式优化 (portrait orientation on mobile) */
+        @media (orientation: portrait) and (max-width: 768px) {
+            body {
+                padding-bottom: 20px;
+            }
+
+            #game-container {
+                /* 竖屏时游戏区域小一些，留出空间给控制面板 */
+                max-height: calc(50vh - 60px);
+            }
+
+            #bottom-panels {
+                /* 竖屏时面板在游戏下方垂直排列 */
+                flex-direction: column;
+                width: 100%;
+            }
+
+            #memo-panel {
+                order: 1;
+            }
+
+            #session-panel {
+                order: 2;
+            }
+
+            #timeline-panel {
+                order: 3;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1170,12 +1635,20 @@
             </div>
         </div>
 
-        <!-- Guest Agent 名单面板（右下角） -->
-        <div id="guest-agent-panel">
-            <div id="guest-agent-panel-title">访 客 列 表</div>
-            <div id="guest-agent-list">
-                <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">正在加载访客...</div>
+        <!-- 会话列表面板（Phase 2） -->
+        <div id="session-panel">
+            <div id="session-panel-title">📋 最近会话</div>
+            <div id="session-list">
+                <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">加载中...</div>
             </div>
+            <div id="session-count" class="session-footer">共 X 个会话</div>
+        </div>
+
+        <!-- 消息流 Timeline 面板（Phase 2） -->
+        <div id="timeline-panel">
+            <div id="timeline-title">🕐 今日动态</div>
+            <div id="timeline-list">
+                <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">加载中...</div>
             </div>
         </div>
     </div>

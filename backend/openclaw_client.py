@@ -125,3 +125,103 @@ def get_agent_detail(agent_id):
         if agent.get('id') == agent_id:
             return agent
     return None
+
+
+def get_sessions_list(limit=20, agent_filter=None, active_minutes=None):
+    """Get list of recent sessions.
+
+    Calls: openclaw sessions --json --all-agents [--active N]
+
+    Returns:
+        Tuple of (sessions_list, total_count)
+    """
+    try:
+        args = ['sessions', '--json', '--all-agents']
+        if active_minutes:
+            args.extend(['--active', str(active_minutes)])
+
+        result = run_openclaw_command(args, timeout=15)
+        if result and isinstance(result, dict) and 'sessions' in result:
+            sessions = result.get('sessions', [])
+            total = result.get('count', len(sessions))
+
+            # Filter by agent if specified
+            if agent_filter:
+                sessions = [s for s in sessions if s.get('agentId') == agent_filter]
+
+            # Apply limit
+            sessions = sessions[:limit]
+            return sessions, total
+        return [], 0
+    except Exception as e:
+        print("get_sessions_list failed:", e)
+        return [], 0
+
+
+def get_agent_identity_map():
+    """Get agentId -> {name, emoji} mapping for session data enrichment.
+
+    Returns:
+        Dict mapping agentId to identity info
+    """
+    agents = get_agents_list()
+    return {
+        a.get('id', 'unknown'): {
+            'name': a.get('identityName') or a.get('name') or a.get('id', 'Unknown'),
+            'emoji': a.get('identityEmoji') or '🤖',
+            'model': a.get('model', ''),
+        }
+        for a in agents if a.get('id')
+    }
+
+
+def parse_session_key(key):
+    """Parse session key to extract channel and kind.
+
+    Key format: agent:{agentId}:{channel}:{kind}:{id}@domain
+    Or: agent:{agentId}:{agentId}
+
+    Returns:
+        Dict with channel and kind
+    """
+    if not key:
+        return {'channel': 'unknown', 'kind': 'unknown'}
+
+    parts = key.split(':')
+    if len(parts) >= 5:
+        # agent:{agentId}:{channel}:{kind}:{id}@domain
+        return {'channel': parts[2], 'kind': parts[3]}
+    elif len(parts) >= 3:
+        # agent:{agentId}:{agentId} or similar
+        return {'channel': 'direct', 'kind': parts[2] if len(parts) > 2 else 'direct'}
+    return {'channel': 'unknown', 'kind': 'unknown'}
+
+
+def parse_progress_from_detail(detail):
+    """Parse progress percentage from detail string.
+
+    Matches patterns like [45%] or (78% complete) or 78%
+
+    Returns:
+        int 0-100 or None if no match
+    """
+    if not detail:
+        return None
+
+    import re
+    # Try [NN%] pattern first
+    match = re.search(r'\[(\d+)%\]', detail)
+    if match:
+        return min(100, max(0, int(match.group(1))))
+
+    # Try (NN% complete) or (NN% finished) pattern
+    match = re.search(r'\((\d+)%\s*(?:complete|finished)\)', detail, re.IGNORECASE)
+    if match:
+        return min(100, max(0, int(match.group(1))))
+
+    # Try standalone NN% pattern
+    match = re.search(r'(\d+)%', detail)
+    if match:
+        return min(100, max(0, int(match.group(1))))
+
+    return None
